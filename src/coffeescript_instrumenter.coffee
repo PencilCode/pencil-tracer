@@ -156,12 +156,18 @@ class CoffeeScriptInstrumenter
     extra =
       switch eventType
         when "before", "after"
-          funcDef = if @isFunctionDef(options.node) then ", functionDef: true" else ""
-          "vars: [" + ("{name: '#{name}', value: #{@soakify(name)} #{funcDef}}" for name in vars) + "]"
+          if @options.trackVariables
+            funcDef = if @isFunctionDef(options.node) then ", functionDef: true" else ""
+            ", vars: [" + ("{name: '#{name}', value: #{@soakify(name)} #{funcDef}}" for name in vars) + "]"
+          else
+            ""
         when "enter"
-          "vars: [" + ("{name: '#{name}', value: #{name}}" for name in vars) + "]"
+          if @options.trackVariables
+            ", vars: [" + ("{name: '#{name}', value: #{name}}" for name in vars) + "]"
+          else
+            ""
         when "leave"
-          "returnOrThrow: #{options.returnOrThrowVar}"
+          ", returnOrThrow: #{options.returnOrThrowVar}"
 
     if eventType is "after"
       if @options.includeArgsStrings
@@ -169,7 +175,7 @@ class CoffeeScriptInstrumenter
       else
         extra += ", functionCalls: [" + ("{name: '#{f.name}', value: #{f.tempVar}}" for f in functionCalls) + "]"
 
-    eventObj = "{ location: #{locationObj}, type: '#{eventType}', #{extra} }"
+    eventObj = "{ location: #{locationObj}, type: '#{eventType}'#{extra} }"
 
     # Create the node from a string of CoffeeScript.
     instrumentedNode =

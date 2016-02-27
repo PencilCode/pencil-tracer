@@ -42,3 +42,8 @@ describe 'CoffeeScriptInstrumenter', ->
       js = pencilTracer.instrumentCoffee('f(1, 2, 3)', coffeeScript, includeArgsStrings: true)
       js.should.match /argsString: '1, 2, 3'/
 
+    it 'should listen to the "trackVariables" option', ->
+      js = pencilTracer.instrumentCoffee('x = 11', coffeeScript)
+      js.should.not.match /vars:/
+      js = pencilTracer.instrumentCoffee('x = 11', coffeeScript, trackVariables: true)
+      js.should.match /vars:\s*\[\s*\{\s*name:\s*'x'/

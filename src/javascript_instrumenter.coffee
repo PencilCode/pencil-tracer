@@ -17,7 +17,7 @@ class JavaScriptInstrumenter
   # Options:
   #   * `traceFunc`: the name of the function to call for each trace event.
   #     (Default: "pencilTrace")
-  constructor: (@options) ->
+  constructor: (@options = {}) ->
     @options.traceFunc ?= "pencilTrace"
 
   # Returns a unique name to use as a temporary variable, by appending a number
@@ -103,12 +103,18 @@ class JavaScriptInstrumenter
     extra =
       switch eventType
         when "before", "after"
-          funcDef = if @isFunctionDef(options.node) then ", functionDef: true" else ""
-          "vars: [" + ("{name: '#{name}', value: #{@soakify(name)} #{funcDef}}" for name in vars) + "]"
+          if @options.trackVariables
+            funcDef = if @isFunctionDef(options.node) then ", functionDef: true" else ""
+            ", vars: [" + ("{name: '#{name}', value: #{@soakify(name)} #{funcDef}}" for name in vars) + "]"
+          else
+            ""
         when "enter"
-          "vars: [" + ("{name: '#{name}', value: #{name}}" for name in vars) + "]"
+          if @options.trackVariables
+            ", vars: [" + ("{name: '#{name}', value: #{name}}" for name in vars) + "]"
+          else
+            ""
         when "leave"
-          "returnOrThrow: #{options.returnOrThrowVar}"
+          ", returnOrThrow: #{options.returnOrThrowVar}"
 
     if eventType is "after"
       if @options.includeArgsStrings
@@ -116,7 +122,7 @@ class JavaScriptInstrumenter
       else
         extra += ", functionCalls: [" + ("{name: '#{f.name}', value: #{f.tempVar}}" for f in functionCalls) + "]"
 
-    eventObj = "{ location: #{locationObj}, type: '#{eventType}', #{extra} }"
+    eventObj = "{ location: #{locationObj}, type: '#{eventType}'#{extra} }"
 
     instrumentedNode =
       acorn.parse("#{@options.traceFunc}(#{eventObj});").body[0]

@@ -156,7 +156,7 @@ testFile = (traceFile, language) ->
   code = fs.readFileSync path.join(tracesDir, language, traceFile), "utf-8"
   instrumentedCode =
     if language is "js"
-      instrumentJs code
+      instrumentJs code, trackVariables: true
     else
       instrumentCoffee code, coffee, bare: true, trackVariables: true
 

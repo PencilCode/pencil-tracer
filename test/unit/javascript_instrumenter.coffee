@@ -34,3 +34,8 @@ describe 'JavaScriptInstrumenter', ->
       js = pencilTracer.instrumentJs('f(1, 2, 3);', includeArgsStrings: true)
       js.should.match /argsString: '1, 2, 3'/
 
+    it 'should listen to the "trackVariables" option', ->
+      js = pencilTracer.instrumentJs('var x = 11;')
+      js.should.not.match /vars:/
+      js = pencilTracer.instrumentJs('var x = 11;', trackVariables: true)
+      js.should.match /vars:\s*\[\s*\{\s*name:\s*'x'/
